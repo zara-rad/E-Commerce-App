@@ -12,10 +12,31 @@ import cors from "cors";
 import ImageModel from "./models/imageSchema.js";
 import { Readable } from "stream";
 import cookieParser from "cookie-parser";
+import nodemailer from "nodemailer"
+import UserModel from "./models/usersSchema.js";
+import jwt from "jsonwebtoken"
+//import { body } from "express-validator"
+console.clear()
+//CREATE CONNECTION TO OUR GMAIL
+export const transporter = nodemailer.createTransport({
+    //depends on the host which we are using  next line should change as well,for now we use our own gmail
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // upgrade later with STARTTLS
+    auth: {
+        user: "zahra.rafieirad1980@gmail.com",
+        pass: process.env.NODEMAILER_PASS,
+    },
+});
+
+
+
+
+
 console.clear()
 const PORT = process.env.PORT || 5000;
 
-//make a mongoose conneection
+//make a mongoose connection
 try {
     await mongoose.connect(process.env.MONGO_URI, { dbName: "e-store" });
     console.log("mongodb connected!");
@@ -36,6 +57,29 @@ app.use(express.json()); // parse any incoming json data and store in req.body
 
 //cookie parser middleware( parse your cookie header and give cookies data in req.cookies)
 app.use(cookieParser());
+//verify email toke
+app.get("/verifyemail/:token", async (req, res, next) => {
+    try {
+        const { token } = req.params
+        const decoded = jwt.verify(token, process.env.SECRET_KEY)//it returns payload
+        if (!decoded)
+            return res.send({ sucsess: false, message: "Incvalid token...!" })
+        //FIRST WAY  --more readable way than second way
+        /* const user = await UsersModel.findById(decoded._id)
+        user.confirmEmail = true
+        await user.save() //storing user in DB */
+        //SECOND WAY
+        const updatedUser = await UserModel.findByIdAndUpdate(decoded._id, { $set: { confirmEmail: true } }, { new: true })
+        res.send({ sucsess: true, data: updatedUser, message: "Thanks for confirming your email!" })
+
+    } catch (err) {
+        res.send({ sucsess: false, message: err.message })
+    }
+})
+
+
+
+
 
 app.post("/create-checkout-session", async (req, res) => {
     const { carts } = req.body;
@@ -65,25 +109,7 @@ app.post("/create-checkout-session", async (req, res) => {
 
 //middleware (its a function , it receives 3 parameters , req,res,next) ,can send back response to client or forward your request to next handler
 
-//custom
-/* function log(req, res, next) {
-  console.log("received Request on ", req.url);
-  next();
-}
-function checkMethods(req, res, next) {
-  console.log("we received request with mehtod ", req.method);
-  next();
-}
 
-app.use([express.json(), checkMethods, log]); */
-
-/* app.use((req, res, next) => {
-  if (req.method === "DELETE") {
-    next("You dont accept any delete request");
-  } else {
-    next();
-  }
-}); */
 
 //Routes
 app.use("/products", productRoutes);

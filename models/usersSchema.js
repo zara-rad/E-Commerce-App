@@ -42,7 +42,8 @@ const userSchema = new Schema({
     /* city: { type: String },
        country: { type: String },
        contactInfo: { type: Number } */
-    orders: [{ type: Schema.Types.ObjectId, ref: "Order" }]
+    orders: [{ type: Schema.Types.ObjectId, ref: "Order" }],
+    confirmEmail: { type: Boolean, default: false },
 },
     //create and update time stamp.next line is easier 
     //createdAt: { type: Date, default: Date.now },

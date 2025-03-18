@@ -5,8 +5,14 @@ import { body } from "express-validator"
 //npm i jsonwebtoken == to get and create unique token
 import jwt from "jsonwebtoken"
 import ImageModel from "../models/imageSchema.js"
-//import { body } from "express-validator"
-console.clear()
+import { transporter } from "../server.js"
+
+
+
+
+
+
+
 //GET
 export const getAllUsers = async (req, res, next) => {
     //get all users from DB and send to client
@@ -80,6 +86,41 @@ export const createNewUser = async (req, res, next) => {
             req.body.profile_avatar = "http://localhost:5000/images/" + image.fileName;
         }
         const user = await UsersModel.create(req.body);
+        //VERIFY 17 MARCH
+
+        const token = jwt.sign(
+            { _id: user._id, email: user.email },
+            process.env.SECRET_KEY
+        );
+        console.log(token)
+        try {
+            const confirmation_link = `http://localhost:5000/verifyemail/${token}`
+            await transporter.sendMail({
+                from: "no-reply@e-store.com",
+                to: user.email,
+                subject: "Verify your email",
+                //ITS THE BODY PART OF YOUR EMAIL   target="_blank" direct user to different tab
+                html: `<div><h1>Please confirm your email</h1><a href=${confirmation_link} target="_blank">Verify Email</a> </div>`
+            })//TILL HERE 
+
+        } catch (error) {
+            console.log(error.message)
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         res.send({ success: true, data: user });
 
 
@@ -103,33 +144,21 @@ export const loginUser = async (req, res, next) => {
                 console.log("check for error")
                 //authenticate the user
                 // issue token jwt.sign(payload, secretkey(signature))
-                const token = jwt.sign(
-                    { _id: user._id, email: user.email },
-                    process.env.SECRET_KEY
-                );
-
-                /*   //VERIFY 17 MARCH
-                  const confirmation_link = `http://localhost:5000/verifyemail/${token}`
-                  await transporter.sendMail({
-                      from: "no-reply@e-store.com",
-                      to: user.email,
-                      subject: "Verify your email",
-                      //ITS THE BODY PART OF YOUR EMAIL   target="_blank" direct user to different tab
-                      html: `<div><h1>Please confirm your email</h1><a href=${confirmation_link} target="_blank">Verify Email</a> </div>`
-                  })//TILL HERE */
+                if (user.confirmEmail) {
+                    const token = jwt.sign(
+                        { _id: user._id, email: user.email },
+                        process.env.SECRET_KEY
+                    );
+                    res.send({ success: true, data: user, token });
+                    //res.header("token", token).send({ success: true, data: user });
 
 
+                } else {
+                    throw new Error("Please confirm your email before login...");
 
 
-                /*   res.send({ success: true, data: user, token }); */
-                //res.header("token", token).send({ success: true, data: user });
-                res
-                    .cookie("token", token, {
-                        httpOnly: true,
-                        secure: false,
-                        sameSite: "none"
-                    })
-                    .send({ success: true, data: user });
+                }
+
             } else {
                 throw new Error("passowrd doesnt match..");
             }
