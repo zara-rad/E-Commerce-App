@@ -82,10 +82,10 @@ app.get("/verifyemail/:token", async (req, res, next) => {
 
 
 app.post("/create-checkout-session", async (req, res) => {
-    const { carts } = req.body;
-    console.log(carts);
+    const { cart } = req.body;
+    console.log(cart);
     const session = await stripe.checkout.sessions.create({
-        line_items: carts.map((item) => {
+        line_items: cart.map((item) => {
             return {
                 price_data: {
                     currency: "eur",
