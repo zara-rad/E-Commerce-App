@@ -51,6 +51,39 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 
 //serve static files
 app.use(express.static("views"));
+
+// This is your Stripe CLI webhook secret for testing your endpoint locally.
+const endpointSecret = process.env.SIGNING_SECRET;
+
+app.post('/webhook', express.raw({ type: 'application/json' }), (request, response) => {
+    const sig = request.headers['stripe-signature'];
+
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+    } catch (err) {
+        response.status(400).send(`Webhook Error: ${err.message}`);
+        return;
+    }
+
+    // Handle the event
+    switch (event.type) {
+        case 'checkout.session.completed':
+            const session = event.data.object;
+            console.log(session)
+            // Then define and call a function to handle the event checkout.session.completed
+            break;
+        // ... handle other event types
+        default:
+            console.log(`Unhandled event type ${event.type}`);
+    }
+
+    // Return a 200 response to acknowledge receipt of the event
+    response.send();
+});
+
+
 //json middleware
 app.use(express.json()); // parse any incoming json data and store in req.body
 
@@ -114,36 +147,6 @@ app.post("/create-checkout-session", auth, async (req, res) => {
     res.send({ id: session.id });
 });
 
-// This is your Stripe CLI webhook secret for testing your endpoint locally.
-const endpointSecret = process.env.SIGNING_SECRET;
-
-app.post('/webhook', express.raw({ type: 'application/json' }), (request, response) => {
-    const sig = request.headers['stripe-signature'];
-
-    let event;
-
-    try {
-        event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
-    } catch (err) {
-        response.status(400).send(`Webhook Error: ${err.message}`);
-        return;
-    }
-
-    // Handle the event
-    switch (event.type) {
-        case 'checkout.session.completed':
-            const session = event.data.object;
-            console.log(session)
-            // Then define and call a function to handle the event checkout.session.completed
-            break;
-        // ... handle other event types
-        default:
-            console.log(`Unhandled event type ${event.type}`);
-    }
-
-    // Return a 200 response to acknowledge receipt of the event
-    response.send();
-});
 
 
 
