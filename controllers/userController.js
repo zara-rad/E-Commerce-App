@@ -83,7 +83,7 @@ export const createNewUser = async (req, res, next) => {
                 fileName: Date.now() + "_" + req.file.originalname,
                 data: req.file.buffer
             })
-            req.body.profile_avatar = "http://localhost:5000/images/" + image.fileName;
+            req.body.profile_avatar = "https://e-commerce-app-terv.onrender.com/images/" + image.fileName;
         }
         const user = await UsersModel.create(req.body);
         //VERIFY 17 MARCH
@@ -94,7 +94,7 @@ export const createNewUser = async (req, res, next) => {
         );
         console.log(token)
         try {
-            const confirmation_link = `http://localhost:5000/verifyemail/${token}`
+            const confirmation_link = `https://e-commerce-app-terv.onrender.com/verifyemail/${token}`
             await transporter.sendMail({
                 from: "no-reply@e-store.com",
                 to: user.email,
