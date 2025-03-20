@@ -149,13 +149,11 @@ export const loginUser = async (req, res, next) => {
                         { _id: user._id, email: user.email },
                         process.env.SECRET_KEY
                     );
-                    res.send({ success: true, data: user, token });
-                    //res.header("token", token).send({ success: true, data: user });
-
+                    //res.send({ success: true, data: user, token });
+                    res.header("token", token).send({ success: true, data: user });
 
                 } else {
                     throw new Error("Please confirm your email before login...");
-
 
                 }
 
