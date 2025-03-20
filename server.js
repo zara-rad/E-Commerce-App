@@ -80,8 +80,8 @@ app.get("/verifyemail/:token", async (req, res, next) => {
 
 
 
-
-app.post("/create-checkout-session", async (req, res) => {
+//if user verified (auth) and login can place order
+app.post("/create-checkout-session", auth, async (req, res) => {
     const { cart } = req.body;
     console.log(cart);
     const session = await stripe.checkout.sessions.create({
@@ -102,10 +102,56 @@ app.post("/create-checkout-session", async (req, res) => {
         mode: "payment",
         success_url: `https://e-commerce-app-terv.onrender.com/?success=true`,
         cancel_url: `https://e-commerce-app-terv.onrender.com/?canceled=true`,
+
+        metadata: {
+            //WE NEED PRODUCTS_ID TO PLACE ORDER IN DB
+            //metadata only accept String so we change object and array of product to string
+            productIds: cart.map((item) => item._id).join(","),
+            userId: req.user._id.toString()
+        }
     });
 
     res.send({ id: session.id });
 });
+
+// This is your Stripe CLI webhook secret for testing your endpoint locally.
+const endpointSecret = process.env.SIGNING_SECRET;
+
+app.post('/webhook', express.raw({ type: 'application/json' }), (request, response) => {
+    const sig = request.headers['stripe-signature'];
+
+    let event;
+
+    try {
+        event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+    } catch (err) {
+        response.status(400).send(`Webhook Error: ${err.message}`);
+        return;
+    }
+
+    // Handle the event
+    switch (event.type) {
+        case 'checkout.session.completed':
+            const session = event.data.object;
+            console.log(session)
+            // Then define and call a function to handle the event checkout.session.completed
+            break;
+        // ... handle other event types
+        default:
+            console.log(`Unhandled event type ${event.type}`);
+    }
+
+    // Return a 200 response to acknowledge receipt of the event
+    response.send();
+});
+
+
+
+
+
+
+
+
 
 //middleware (its a function , it receives 3 parameters , req,res,next) ,can send back response to client or forward your request to next handler
 
