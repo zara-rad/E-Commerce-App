@@ -100,8 +100,8 @@ app.post("/create-checkout-session", async (req, res) => {
         }),
 
         mode: "payment",
-        success_url: `http://localhost:5173?success=true`,
-        cancel_url: `http://localhost:5173/?canceled=true`,
+        success_url: `https://e-commerce-app-terv.onrender.com/?success=true`,
+        cancel_url: `https://e-commerce-app-terv.onrender.com/?canceled=true`,
     });
 
     res.send({ id: session.id });
