@@ -15,6 +15,7 @@ import cookieParser from "cookie-parser";
 import nodemailer from "nodemailer"
 import UserModel from "./models/usersSchema.js";
 import jwt from "jsonwebtoken"
+import OrderModel from "./models/ordersSchema.js";
 //import { body } from "express-validator"
 console.clear()
 //CREATE CONNECTION TO OUR GMAIL
@@ -55,7 +56,7 @@ app.use(express.static("views"));
 // This is your Stripe CLI webhook secret for testing your endpoint locally.
 const endpointSecret = process.env.SIGNING_SECRET;
 
-app.post('/webhook', express.raw({ type: 'application/json' }), (request, response) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), async (request, response) => {
     const sig = request.headers['stripe-signature'];
 
     let event;
@@ -72,8 +73,25 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (request, respon
         case 'checkout.session.completed':
             const session = event.data.object;
             console.log(session)
+            //ADD DATA TO DB...
+            //converting string meta data to object form
+            const productIds = session.metadata?.productIds
+                .split(",")
+                .map(id => new mongoose.Types.ObjectId(id));
+            const userId = new mongoose.Types.ObjectId(session.metadata?.userId);
+            const totalPrice = parseInt(session.amount_total.toFixed(2))
+            const order = await OrderModel.create({
+                userId,
+                products,
+                totalPrice
+            })
+
+            console.log(order)
+
+
+
             // Then define and call a function to handle the event checkout.session.completed
-            break;
+            session.break;
         // ... handle other event types
         default:
             console.log(`Unhandled event type ${event.type}`);
@@ -146,15 +164,6 @@ app.post("/create-checkout-session", auth, async (req, res) => {
 
     res.send({ id: session.id });
 });
-
-
-
-
-
-
-
-
-
 
 //middleware (its a function , it receives 3 parameters , req,res,next) ,can send back response to client or forward your request to next handler
 

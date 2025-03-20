@@ -108,19 +108,6 @@ export const createNewUser = async (req, res, next) => {
 
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
         res.send({ success: true, data: user });
 
 
