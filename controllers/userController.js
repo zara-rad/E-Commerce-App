@@ -195,9 +195,8 @@ export const deleteSingleUser = async (req, res, next) => {
 //create verify func to verify the token and show in profile
 export const verifyToken = async (req, res, next) => {
     try {
-        const token = req.cookies.token
+        const token = req.headers.token
         console.log(token)
-        console.log(req.cookies)
         const payload = jwt.verify(token, process.env.SECRET_KEY)
         if (!payload) {
             return next("Token is invalid")
