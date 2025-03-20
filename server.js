@@ -58,7 +58,7 @@ const endpointSecret = process.env.SIGNING_SECRET;
 
 app.post('/webhook', express.raw({ type: 'application/json' }), async (request, response) => {
     const sig = request.headers['stripe-signature'];
-
+    console.log("webhook is working!")
     let event;
 
     try {
@@ -75,7 +75,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), async (request, 
             console.log(session)
             //ADD DATA TO DB...
             //converting string meta data to object form
-            const productIds = session.metadata?.productIds
+            const products = session.metadata?.productIds
                 .split(",")
                 .map(id => new mongoose.Types.ObjectId(id));
             const userId = new mongoose.Types.ObjectId(session.metadata?.userId);
@@ -134,7 +134,7 @@ app.get("/verifyemail/:token", async (req, res, next) => {
 //if user verified (auth) and login can place order
 app.post("/create-checkout-session", auth, async (req, res) => {
     const { cart } = req.body;
-    console.log(cart);
+    //console.log(cart);
     const session = await stripe.checkout.sessions.create({
         line_items: cart.map((item) => {
             return {
